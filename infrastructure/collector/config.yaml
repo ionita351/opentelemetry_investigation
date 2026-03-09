@@ -1,0 +1,54 @@
+# extensions:
+#   health_check:
+#   pprof:
+#     endpoint: 0.0.0.0:1777
+#   zpages:
+#     endpoint: 0.0.0.0:55679
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+
+exporters:
+
+  pulsar/trace:
+    endpoint: pulsar://pulsar:6650
+    topic: otlp_spans
+    encoding: otlp_proto
+
+  pulsar/metric:
+    endpoint: pulsar://pulsar:6650
+    topic: otlp_metrics
+    encoding: otlp_proto
+
+  pulsar/log:
+    endpoint: pulsar://pulsar:6650
+    topic: otlp_logs
+    encoding: otlp_proto
+
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [pulsar/trace, debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [pulsar/metric, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [pulsar/log, debug]
+
+    # extensions: [health_check, pprof, zpages]

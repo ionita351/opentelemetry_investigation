@@ -1,0 +1,14 @@
+Создан docker-compose файл для 3-х элементов:
+- pulsar. Потры: 6650, 8080
+- iotdb. Порты: 6667, 8081     root/root
+- opentelemetry-collector. Порты: 4317, 4318
+- grafana. Порты: 3000         admin/admin (admin/Zaxscdvf!351)
+
+opentelemetry-collector по умолчанию пишет принятые сообщения в Pulsar:
+traceMessage -> topic otlp_spans
+metricMessage -> topic otlp_metrics
+logRecordMessage -> topic otlp_logs
+
+Для старта:
+1. Перейдите в папку opentelemetry-investigation/infrastructure
+2. Выполните команду: docker-compose up -d

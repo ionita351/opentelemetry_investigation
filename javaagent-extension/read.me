@@ -1,0 +1,9 @@
+Получение информации мониторинга app.jar цепочкой:
+    app.jar -> javaagent.jar+extension.jar
+
+Исходные данные:
+- из интернета скачан javaagent.jar (ссылка https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar)
+- командой (mvn clean package) сформированы app.jar (sample-project) и exporter.jar (javaagent-extension).
+
+В 1-м CMD окне запускаем:
+java -javaagent:./opentelemetry-javaagent.jar -D"otel.javaagent.extensions=exporter.jar" -jar app.jar

@@ -1,0 +1,84 @@
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./collector/config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - 1888:1888 # pprof extension
+      - 8888:8888 # Prometheus metrics exposed by the Collector
+      - 8889:8889 # Prometheus exporter metrics
+      - 13133:13133 # health_check extension
+      - 4317:4317 # OTLP gRPC receiver
+      - 4318:4318 # OTLP http receiver
+      - 55679:55679 # zpages extension
+    depends_on:
+      - pulsar
+    networks:
+      iotdb:
+
+  pulsar:
+    image: apachepulsar/pulsar:latest
+    container_name: pulsar-standalone
+    ports:
+      # Pulsar client port
+      - "6650:6650"
+      # Pulsar admin/websocket port
+      - "8080:8080"
+      #environment:
+      # Optional: Adjust memory limits for the standalone instance if needed
+      # - "BOOKIE_MEM=-Xms512m -Xmx512m"
+      # - "BROKER_MEM=-Xms512m -Xmx512m"
+    volumes:
+     - ./pulsar/data:/pulsar/data
+     - ./pulsar/metadata:/pulsar/metadata
+    command: ["bin/pulsar", "standalone"]
+    #restart: always
+    networks:
+      iotdb:
+
+  iotdb-service:
+    image: apache/iotdb:2.0.6-standalone
+    hostname: iotdb-service
+    container_name: iotdb-service
+    ports:
+      - "6667:6667"
+      - "8081:80"
+      - "18080:18080"
+    environment:
+      - cn_internal_address=iotdb-service
+      - cn_internal_port=10710
+      - cn_consensus_port=10720
+      - cn_seed_config_node=iotdb-service:10710
+      - dn_rpc_address=iotdb-service
+      - dn_internal_address=iotdb-service
+      - dn_rpc_port=6667
+      - dn_mpp_data_exchange_port=10740
+      - dn_schema_region_consensus_port=10750
+      - dn_data_region_consensus_port=10760
+      - dn_seed_config_node=iotdb-service:10710
+      - enable_rest_service=true
+    volumes:
+      - ./iotdb/iotdb-system.properties:/iotdb/conf/iotdb-system.properties
+      - ./iotdb/data:/iotdb/data
+      - ./iotdb/logs:/iotdb/logs
+    networks:
+      iotdb:
+
+  grafana:
+    image: grafana/grafana
+#    volumes:
+#      - ./grafana_data:/var/lib/grafana
+#      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+#      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+#      - ./grafana/cloudquery-dashboard.json:/var/lib/grafana/dashboards/cloudquery-dashboard.json
+#    environment:
+#      GF_FEATURE_TOGGLES_ENABLE: "tempoApmTable"
+    ports:
+      - "3000:3000"
+    networks:
+      iotdb:
+
+networks:
+  iotdb:
+    name: iotdb
+    external: false
